@@ -1,0 +1,8 @@
+libdir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@
+
+Name: Libpressio-TThresh
+Description: TThresh plugin for LibPressio
+Version: @PROJECT_VERSION@
+Cflags:
+Libs: -L${libdir} -llibpressio_tthresh
+Requires: libpressio
