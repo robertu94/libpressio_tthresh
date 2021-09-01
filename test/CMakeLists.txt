@@ -35,7 +35,7 @@ target_link_libraries(
   validate_tthresh
   PRIVATE
     LibPressio::libpressio
-    pressio_tthresh
+    libpressio_tthresh
     gtest_main
     gtest
     gmock
