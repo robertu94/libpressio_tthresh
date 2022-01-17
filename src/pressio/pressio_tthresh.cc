@@ -30,9 +30,18 @@ public:
     return "3c876c06d60570cc915bb61b43d2094ff1847e42";
   }
 
+  int patch_version() const override {
+    return 2;
+  }
+
 protected:
   pressio_options get_options_impl() const override {
     pressio_options opts;
+    if(target == Target::eps) {
+      set(opts, "pressio:abs", target_value);
+    } else {
+      set_type(opts, "pressio:abs", pressio_option_double_type);
+    }
     set_type(opts, "tthresh:target_str", pressio_option_charptr_type);
     set(opts, "tthresh:target", static_cast<int32_t>(target));
     set(opts, "tthresh:target_value", target_value);
@@ -58,6 +67,9 @@ protected:
     return opts;
   }
   int set_options_impl(const pressio_options &options) override {
+    if(get(options, "pressio:abs", &target_value) == pressio_options_key_set) {
+      target = eps;
+    }
     get(options, "tthresh:target_value", &target_value);
     int32_t tmp_target;
     std::string tmp_target_str;
