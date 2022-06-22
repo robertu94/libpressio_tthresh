@@ -4,6 +4,10 @@
 #include <map>
 #include "tthresh_lib.h"
 
+extern "C" void libpressio_register_tthresh() {
+  
+}
+
 const std::map<std::string, Target> target_types {
   {"eps", Target::eps},
   {"rmse", Target::rmse},

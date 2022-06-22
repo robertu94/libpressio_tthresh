@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
-project(tthresh VERSION "0.66.4" LANGUAGES CXX)
+project(tthresh VERSION "0.0.5" LANGUAGES CXX)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -56,6 +56,10 @@ add_library(libpressio_tthresh
   src/pressio/pressio_decompress.hpp
   src/pressio/compress.hpp
   )
+target_include_directories(libpressio_tthresh PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
 target_link_libraries(libpressio_tthresh 
   PRIVATE
   Eigen3::Eigen
@@ -68,10 +72,28 @@ configure_file(
   @ONLY
   )
 
-export(TARGETS libpressio_tthresh NAMESPACE PressioTThresh:: FILE PressioTThresh.cmake)
-install(TARGETS libpressio_tthresh EXPORT PressioTThreshConfig LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(EXPORT PressioTThreshConfig NAMESPACE PressioTThresh:: DESTINATION share/PressioTThresh/cmake)
+install(TARGETS libpressio_tthresh EXPORT LibPressioTThreshTargets LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpressio_tthresh.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)
+install(EXPORT LibPressioTThreshTargets NAMESPACE LibPressioTThresh:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/LibPressioTThresh/)
+include(CMakePackageConfigHelpers)
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/LibPressioTThreshConfig.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/LibPressioTThreshConfig.cmake"
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/LibPressioTThresh
+)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/LibPressioTThreshConfigVersion.cmake"
+  VERSION "${PROJECT_VERSION}"
+  COMPATIBILITY AnyNewerVersion
+)
+install(FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_tthresh.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    )
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/LibPressioTThreshConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/LibPressioTThreshConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/LibPressioTThresh
+)
 
 if(BUILD_TESTING)
   add_subdirectory(test)
