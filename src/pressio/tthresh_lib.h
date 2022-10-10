@@ -8,6 +8,7 @@
 #define AUTOCROP_THRESHOLD (1e-10)
 
 #include <vector>
+#include "tthresh_metrics.h"
 #include "pressio_encode.hpp"
 #include "tthresh.hpp"
 #include "tucker.hpp"
@@ -197,7 +198,7 @@ vector<uint64_t> encode_array(double* c, size_t size, double eps_target, bool is
   return current;
 }
 
-double *compress_pressio_tthresh(pressio_data const* input, pressio_data* compressed, Target target, double target_value) {
+double *compress_pressio_tthresh(pressio_data const* input, pressio_data* compressed, Target target, double target_value, tthresh_metric& metrics) {
 
   n = s.size();
   cumulative_products(s, sprod);
@@ -266,7 +267,7 @@ double *compress_pressio_tthresh(pressio_data const* input, pressio_data* compre
   pressio_data* double_input = pressio_data_cast(input, pressio_double_dtype);
   double *data = static_cast<double*>(pressio_data_ptr(double_input, NULL));
   double datamin = numeric_limits < double >::max(); // Tensor statistics
-  double datamax = numeric_limits < double >::min();
+  double datamax = numeric_limits < double >::lowest();
   double datanorm = 0;
 
   for (size_t i = 0; i < size; ++i) {
@@ -310,6 +311,8 @@ double *compress_pressio_tthresh(pressio_data const* input, pressio_data* compre
   open_wbit();
   vector<uint64_t> current = encode_array(c, size, epsilon, true);
   close_wbit();
+  const auto encode_end_pos = zs.file.tellp();
+  metrics.encoded_core_size = encode_end_pos - inital_pos;
 
   /*******************************/
   // Compute and save tensor ranks
@@ -348,12 +351,15 @@ double *compress_pressio_tthresh(pressio_data const* input, pressio_data* compre
   //TODO metrics stop ranks
 
   write_stream(reinterpret_cast<unsigned char*> (&r[0]), n*sizeof(r[0]));
+  metrics.stop_ranks_size = n * sizeof(r[0]);
 
   for (uint8_t i = 0; i < n; ++i) {
     write_stream(reinterpret_cast<uint8_t*> (slicenorms[i].data()), r[i]*sizeof(double));
+    metrics.slice_norm_size += r[i]*sizeof(double);
   }
 
   vector<MatrixXd> Uweighteds;
+  const auto unweighted_begin = zs.file.tellp();
   open_wbit();
   for (int dim = 0; dim < n; ++dim) {
     MatrixXd Uweighted = Us[dim].leftCols(r[dim]);
@@ -364,6 +370,7 @@ double *compress_pressio_tthresh(pressio_data const* input, pressio_data* compre
   }
   close_wbit();
   const auto final_pos = zs.file.tellp();
+  metrics.unweighted_size = final_pos - unweighted_begin;
   const size_t compressed_size =  final_pos - inital_pos;
   *compressed = pressio_data::owning(pressio_byte_dtype, {compressed_size});
   zs.file.read(
@@ -497,7 +504,7 @@ vector<double> dequantize(vector<uint64_t>& current) { // TODO after resize
   return c;
 }
 
-void decompress_pressio_tthresh(pressio_data const* compressed, pressio_data* output, vector<Slice>& cutout, bool autocrop) {
+void decompress_pressio_tthresh(pressio_data const* compressed, pressio_data* output, vector<Slice>& cutout, bool autocrop, tthresh_metric& metrics) {
 
   /***************************************************/
   // Read output tensor dimensionality, sizes and type

@@ -3,6 +3,7 @@
 #include <std_compat/memory.h>
 #include <map>
 #include "tthresh_lib.h"
+#include "tthresh_metrics.h"
 
 extern "C" void libpressio_register_tthresh() {
   
@@ -65,7 +66,7 @@ protected:
   }
   pressio_options get_configuration_impl() const override {
     pressio_options opts;
-    set(opts,"pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_single));
+    set(opts,"pressio:thread_safe", pressio_thread_safety_single);
     set(opts,"pressio:stability", "experimental");
     set(opts,"tthresh:target_str", target_types_strs());
     return opts;
@@ -103,7 +104,8 @@ protected:
         input,
         output,
         target,
-        target_value
+        target_value,
+        metrics
         );
 
     return 0;
@@ -114,12 +116,23 @@ protected:
         input,
         output,
         slices,
-        false
+        false,
+        metrics
         );
     return 0;
   }
+  pressio_options get_metrics_results_impl() const override {
+    pressio_options ret;
+    set(ret, "tthresh:encoded_core_size", metrics.encoded_core_size);
+    set(ret, "tthresh:unweighted_size", metrics.unweighted_size);
+    set(ret, "tthresh:stop_ranks_size", metrics.stop_ranks_size);
+    set(ret, "tthresh:slice_norm_size", metrics.slice_norm_size);
+    return ret;
+  }
+
   double target_value = 0;
   Target target = Target::eps;
+  tthresh_metric metrics;
 };
 
 
