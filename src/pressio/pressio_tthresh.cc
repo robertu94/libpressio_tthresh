@@ -100,6 +100,7 @@ protected:
     auto dims = input->dimensions();
     s = std::vector<uint32_t>(dims.begin(), dims.end());
     cumulative_products(s, sprod);
+    try {
     compress_pressio_tthresh(
         input,
         output,
@@ -107,11 +108,14 @@ protected:
         target_value,
         metrics
         );
-
     return 0;
+    } catch(std::exception const& ex) {
+      return set_error(1, ex.what());
+    }
   }
   int decompress_impl(const pressio_data *input, struct pressio_data *output) override {
     std::vector<Slice> slices;
+    try {
     decompress_pressio_tthresh(
         input,
         output,
@@ -119,7 +123,10 @@ protected:
         false,
         metrics
         );
-    return 0;
+      return 0;
+    } catch(std::exception const& ex) {
+      return set_error(1, ex.what());
+    }
   }
   pressio_options get_metrics_results_impl() const override {
     pressio_options ret;
