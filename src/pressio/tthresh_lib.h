@@ -20,9 +20,29 @@
 #include <map>
 #include <libpressio_ext/cpp/data.h>
 
-
+#if __has_include(<stdfloat>)
+//if we have the standard compliant way to do this, do that
+   #include <stdfloat>
+   #if __STDCPP_FLOAT128_T__
+       typedef std::float128_t LLDOUBLE;
+       typedef std::float128_t LDOUBLE;
+   #else
+//if have C++23's <stdfloat>, but not 128 bit support not fall back to long double
+       typedef long double LLDOUBLE;
+       typedef long double LDOUBLE;
+   #endif
+#else
+#ifdef __GNUC__
+       //if we have an older GNU compiler, use the extension
 typedef __float128 LLDOUBLE;
 typedef __float80 LDOUBLE;
+# else
+       //if we have an older compiler that is not GNU fall back to long double
+   typedef long double LLDOUBLE;
+   typedef long double LDOUBLE;
+#endif
+#endif
+
 
 using namespace std;
 using namespace Eigen;

@@ -69,6 +69,17 @@ protected:
     set(opts,"pressio:thread_safe", pressio_thread_safety_single);
     set(opts,"pressio:stability", "experimental");
     set(opts,"tthresh:target_str", target_types_strs());
+    
+
+    
+        std::vector<std::string> invalidations {"tthresh:target_value", "pressio:abs", "tthresh:target_str", "tthresh:target"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+        set(opts, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(opts, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(opts, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+        set(opts, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs"}));
+
     return opts;
   }
   int set_options_impl(const pressio_options &options) override {

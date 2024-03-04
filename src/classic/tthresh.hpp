@@ -41,20 +41,20 @@ void cumulative_products(vector<uint32_t>& in, vector<size_t>& out) {
         out[i+1] = out[i]*in[i];
 }
 
-stack<high_resolution_clock::time_point> times;
+stack<high_resolution_clock::time_point> tthresh_times;
 
 void start_timer(string message) {
     cout << message << flush;
-    times.push(std::chrono::high_resolution_clock::now());
+    tthresh_times.push(std::chrono::high_resolution_clock::now());
 }
 
 void stop_timer() {
-    if (times.size() < 1) {
+    if (tthresh_times.size() < 1) {
         cout << "Error: timer not set" << endl;
         exit(1);
     }
-    auto elapsed = std::chrono::high_resolution_clock::now() - times.top();
-    times.pop();
+    auto elapsed = std::chrono::high_resolution_clock::now() - tthresh_times.top();
+    tthresh_times.pop();
     cout << "Elapsed time: " << std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count()/1000. << "ms" << endl << flush;
 }
 
