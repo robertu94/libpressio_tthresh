@@ -1,5 +1,6 @@
 #include <libpressio_ext/cpp/compressor.h>
 #include <libpressio_ext/cpp/pressio.h>
+#include <libpressio_ext/cpp/domain_manager.h>
 #include <std_compat/memory.h>
 #include <map>
 #include "tthresh_lib.h"
@@ -107,13 +108,14 @@ protected:
 
     return 0;
   }
-  int compress_impl(const pressio_data *input, struct pressio_data *output) override {
-    auto dims = input->dimensions();
+  int compress_impl(const pressio_data *real_input, struct pressio_data *output) override {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    auto dims = input.dimensions();
     s = std::vector<uint32_t>(dims.begin(), dims.end());
     cumulative_products(s, sprod);
     try {
     compress_pressio_tthresh(
-        input,
+        &input,
         output,
         target,
         target_value,
@@ -124,11 +126,12 @@ protected:
       return set_error(1, ex.what());
     }
   }
-  int decompress_impl(const pressio_data *input, struct pressio_data *output) override {
+  int decompress_impl(const pressio_data *real_input, struct pressio_data *output) override {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
     std::vector<Slice> slices;
     try {
     decompress_pressio_tthresh(
-        input,
+        &input,
         output,
         slices,
         false,
