@@ -6,10 +6,8 @@
 #include "tthresh_lib.h"
 #include "tthresh_metrics.h"
 
-extern "C" void libpressio_register_tthresh() {
-  
-}
 
+namespace libpressio { namespace compressors { namespace tthresh_ns {
 const std::map<std::string, Target> target_types {
   {"eps", Target::eps},
   {"rmse", Target::rmse},
@@ -157,7 +155,13 @@ protected:
 };
 
 
-static pressio_register tthresh_compressor_plugin_register(compressor_plugins(), "tthresh", [] {
+static pressio_register plugin(compressor_plugins(), "tthresh", [] {
       return compat::make_unique<tthresh_compressor_plugin>();
     }
 );
+
+} } }
+
+extern "C" void libpressio_register_tthresh() {
+    libpressio::compressors::tthresh_ns::plugin.ensure_registered();  
+}
